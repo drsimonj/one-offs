@@ -39,7 +39,6 @@ Currently excluded from this script are simple additions for:
 Improvements welcome!
 
     library(dplyr)
-    library(tidyr)
     library(purrr)
     library(ggplot2)
 
@@ -103,12 +102,8 @@ Improvements welcome!
           y    <- points$y[row]
           xend <- points$x[col]
           yend <- points$y[col]
-          
-          # Quick check in case points are identical (meaning path cannot be plotted)
-          if (x != xend || y!= yend) {
-            paths[path, ] <- c(x, y, xend, yend, path_proximity)
-            path <- path + 1
-          }
+          paths[path, ] <- c(x, y, xend, yend, path_proximity)
+          path <- path + 1
         }
       }
     }
