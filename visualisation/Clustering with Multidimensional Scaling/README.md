@@ -39,41 +39,14 @@ Currently excluded from this script are simple additions for:
 Improvements welcome!
 
     library(dplyr)
-
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
     library(tidyr)
-
-    ## Warning: package 'tidyr' was built under R version 3.2.3
-
     library(purrr)
-
-    ## Warning: package 'purrr' was built under R version 3.2.3
-
-    ## 
-    ## Attaching package: 'purrr'
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     order_by
-
     library(ggplot2)
-
-    ## Warning: package 'ggplot2' was built under R version 3.2.4
 
     # source the theme_map for ggplot2
     source("https://dl.dropboxusercontent.com/u/2364714/theme_map.R")
 
-    # Set useful variables =======
+    # Useful variables ============================================
 
     # Data frame of numeric columns to be clustered
     d <- iris %>% keep(is.numeric)
@@ -81,7 +54,7 @@ Improvements welcome!
     # Set the proportion of paths to be drawn
     prop_draw <- .08
 
-    # ============================
+    # =============================================================
 
     # Produce a distance matrix.
     # Here using euclideanvia dist()
@@ -157,7 +130,5 @@ Improvements welcome!
                           max(points$y) + .1 * sd(points$y))
                     ) +
       theme_map()
-
-    ## Loading required package: grid
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-1-1.png)
