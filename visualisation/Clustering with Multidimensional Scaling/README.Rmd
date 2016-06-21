@@ -64,7 +64,7 @@ points <- distance %>%
 #   3. Scaling values within range of 0 - 1 to suit `alpha` in the plot.
 proximity <- distance
 # Step 1a.
-distance[upper.tri(proximity)] <- NA
+proximity[upper.tri(proximity)] <- NA
 diag(proximity) <- NA
 proximity[proximity > quantile(proximity, prop_draw, na.rm = TRUE)] <- NA
 # Step 1b.
