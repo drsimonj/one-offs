@@ -38,7 +38,7 @@ source("https://dl.dropboxusercontent.com/u/2364714/theme_map.R")
 d <- iris %>% keep(is.numeric)
 
 # Set the proportion of paths to be drawn
-prop_draw <- .08
+prop_draw <- .2
 
 # =============================================================
 
@@ -81,8 +81,8 @@ paths <- matrix(nrow = n_paths, ncol = 5) %>% data.frame()
 colnames(paths) <- c("x", "y", "xend", "yend", "proximity")
 
 path <- 1
-for(row in 1:nrow(distance)) {
-  for(col in 1:ncol(distance)) {
+for(row in 2:nrow(distance)) {
+  for(col in 1:(row - 1)) {  # Optimised to avoid the diagonal and upper triangle (which are NA)
     path_proximity <- proximity[row, col]
     if (!is.na(path_proximity)) {
       x    <- points$x[row]
