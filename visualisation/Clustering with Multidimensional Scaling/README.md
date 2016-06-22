@@ -27,6 +27,10 @@ lines) whose alpha (transparency) relates to proximity. Only a certain
 proportion of the closest paths are included to make the plot cleaner
 and reduce computational requirements.
 
+A second example is shown below in which correlations between columns
+are used instead of Euclidean distance of rows. This has a few tweaks
+made.
+
 To reuse, simply assign the variable `d` to your own data. You can also
 easily adjust the proportion of paths to be drawn with `prop_draw`.
 
@@ -51,7 +55,7 @@ Improvements welcome!
     d <- iris %>% keep(is.numeric)
 
     # Set the proportion of paths to be drawn
-    prop_draw <- .08
+    prop_draw <- .2
 
     # =============================================================
 
@@ -94,8 +98,8 @@ Improvements welcome!
     colnames(paths) <- c("x", "y", "xend", "yend", "proximity")
 
     path <- 1
-    for(row in 1:nrow(distance)) {
-      for(col in 1:ncol(distance)) {
+    for(row in 2:nrow(distance)) {
+      for(col in 1:(row - 1)) {  # Optimised to avoid the diagonal and upper triangle (which are NA)
         path_proximity <- proximity[row, col]
         if (!is.na(path_proximity)) {
           x    <- points$x[row]
@@ -127,3 +131,105 @@ Improvements welcome!
       theme_map()
 
 ![](README_files/figure-markdown_strict/unnamed-chunk-1-1.png)
+
+Below example plot correlations between columns. This is a nice way to
+visualize a correlation matrix. Few tweaks are made compared to example
+above to handle negative values etc.
+
+    library(dplyr)
+    library(purrr)
+    library(ggplot2)
+
+    # source the theme_map for ggplot2
+    source("https://dl.dropboxusercontent.com/u/2364714/theme_map.R")
+
+    # Useful variables ============================================
+
+    # Data frame of numeric columns to be clustered
+    d <- mtcars %>% keep(is.numeric)
+
+    # Set the proportion of paths to be drawn
+    prop_draw <- .50
+
+    # =============================================================
+
+    # Produce a distance matrix.
+    # Here using euclideanvia dist()
+    # But easily replaceable with others (e.g., absolute value of correlations)
+    distance <- d %>%
+      cor(use = "pairwise.complete.obs")
+    distance <- sign(distance) * (1 - abs(distance))
+
+    # Use multidimensional Scaling to obtain x and y coordinates for points.
+    points <- distance %>%
+      abs() %>%
+      cmdscale() %>%
+      data.frame() %>%
+      rename(x = X1, y = X2) %>%
+      mutate(id = rownames(.))
+
+    # Create a proximity matrix of the paths to be plotted.
+    # This requires:
+    #   1. Pruning the distance matrix to
+    #      a. only include a proportion of the closest points (prop_draw).
+    #      b. Remove any paths between points with a distance of 0 (as path cannot be drawn).
+    #   2. Inversing the values (from distance to proximity).
+    #   3. Scaling values within range of 0 - 1 to suit `alpha` in the plot.
+    proximity <- abs(distance)
+    # Step 1a.
+    proximity[upper.tri(proximity)] <- NA
+    diag(proximity) <- NA
+    proximity[proximity > quantile(proximity, prop_draw, na.rm = TRUE)] <- NA
+    # Step 1b.
+    proximity[proximity == 0] <- NA
+    # Step 2.
+    proximity <- max(proximity, na.rm = TRUE) - proximity
+    # Step 3.
+    proximity <- (proximity - min(proximity, na.rm = TRUE)) / (max(proximity, na.rm = TRUE) - min(proximity, na.rm = TRUE))
+    proximity <- .7 * proximity  # limit path alpha to .7 instead of 1
+
+    # Produce a data frame of data needed for plotting the paths.
+    n_paths <- sum(!is.na(proximity))
+    paths <- matrix(nrow = n_paths, ncol = 6) %>% data.frame()
+    colnames(paths) <- c("x", "y", "xend", "yend", "proximity", "sign")
+
+    path <- 1
+    for(row in 1:nrow(distance)) {
+      for(col in 1:ncol(distance)) {
+        path_proximity <- proximity[row, col]
+        path_sign <- sign(distance[row, col])
+        if (!is.na(path_proximity)) {
+          x    <- points$x[row]
+          y    <- points$y[row]
+          xend <- points$x[col]
+          yend <- points$y[col]
+          paths[path, ] <- c(x, y, xend, yend, path_proximity, path_sign)
+          path <- path + 1
+        }
+      }
+    }
+
+    # Produce the plot.
+    ggplot() +
+      # Plot the paths
+      geom_curve(data = paths,
+                 aes(x = x, y = y, xend = xend, yend = yend,
+                     alpha = proximity, colour = factor(sign)),
+                 show.legend = FALSE) +
+      # Plot the points
+      geom_point(data = points,
+                 aes(x, y),
+                 size = 3, alpha = .5, shape = 1, colour = "white") +
+      # Plot variable labels
+      geom_text(data = points,
+                aes(x, y, label = id),
+                size = 8, colour = "white") +
+      # expand the axes to add space for curves etc
+      expand_limits(x = c(min(points$x) - .1 * sd(points$x),
+                          max(points$x) + .1 * sd(points$x)),
+                    y = c(min(points$y) - .1 * sd(points$y),
+                          max(points$y) + .1 * sd(points$y))
+      ) +
+      theme_map()
+
+![](README_files/figure-markdown_strict/unnamed-chunk-2-1.png)
