@@ -66,7 +66,7 @@ points <- distance %>%
 #   3. Scaling values within range of 0 - 1 to suit `alpha` in the plot.
 proximity <- distance
 # Step 1a.
-distance[upper.tri(proximity)] <- NA
+proximity[upper.tri(proximity)] <- NA
 diag(proximity) <- NA
 proximity[proximity > quantile(proximity, prop_draw, na.rm = TRUE)] <- NA
 # Step 1b.
@@ -114,7 +114,6 @@ ggplot() +
                       max(points$y) + .1 * sd(points$y))
                 ) +
   theme_map()
-
 ```
 
 Below example plot correlations between columns. This is a nice way to visualize a correlation matrix. Few tweaks are made compared to example above to handle negative values etc.
